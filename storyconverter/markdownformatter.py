@@ -20,8 +20,7 @@ def convert_markdown_to_BBcode(line: str) -> str:
         _link_markdown_to_BBcode,
         _strong_markdown_to_BBcode,
         _bold_markdown_to_BBcode,
-        _italic_markdown_to_BBcode,
-        create_paragraph_breaks]
+        _italic_markdown_to_BBcode]
     for formatFunc in formatting_functions:
         line = formatFunc(line)
     return line
