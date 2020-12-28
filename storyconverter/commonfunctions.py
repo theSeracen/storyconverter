@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # encoding=utf-8
 
+import pathlib
+
 from more_itertools import intersperse
 
 
@@ -27,10 +29,10 @@ def _flatten(passed_argument):
     return rt
 
 
-def concatenate_files(file_list: list[str]) -> str:
+def concatenate_files(file_list: list[pathlib.Path]) -> list[str]:
     file_contents = []
     for file_location in sorted(file_list):
         with open(file_location, 'r') as file:
             file_contents.append(file.read())
 
-    return '\n-------------\n'.join(file_contents)
+    return _flatten(list(intersperse(['\n-------------\n'], file_contents)))
