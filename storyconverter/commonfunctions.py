@@ -8,8 +8,9 @@ def create_paragraph_breaks(lines: list[str]) -> list[str]:
     """Ensures that there is a spare line between each line of text"""
     halfway_lines_list = []
     for line in lines:
-        line = line.strip('\n').split('\n')
-        line = [sub_line + '\n' for sub_line in line]
+        line = line.split('\n')
+        line = [sub_line.replace('\n', '').strip() for sub_line in line]
+        line = [sub_line + '\n' for sub_line in line if sub_line != '']
         halfway_lines_list.append(line)
 
     flattened_lines = _flatten(halfway_lines_list)
