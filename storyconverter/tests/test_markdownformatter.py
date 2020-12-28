@@ -56,9 +56,11 @@ def test_link_simple_markdown_to_BBcode(test_string: str, expected: str):
 
 @pytest.mark.parametrize(('test_string', 'expected'),
                          zip(['[test link](example.com)',
-                              '[test link](example.com)[other link](second.test)'],
+                              '[test link](example.com)[other link](second.test)',
+                              '[test link one](example1.com) then some text [test link 2](example2.com)'],
                              ['[URL=example.com]test link[/URL]',
-                              '[URL=example.com]test link[/URL][URL=second.test]other link[/URL]']))
+                              '[URL=example.com]test link[/URL][URL=second.test]other link[/URL]',
+                              '[URL=example1.com]test link one[/URL] then some text [URL=example2.com]test link 2[/URL]']))
 def test_link_complex_markdown_to_BBcode(test_string: str, expected: str):
     result = markdownformatter.convert_markdown_to_BBcode(test_string)
     assert result == expected

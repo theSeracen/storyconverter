@@ -1,20 +1,14 @@
+#!/usr/bin/env python3
+# encoding=utf-8
+
 """Module for converting a markdown file"""
 
-import os
 import re
-
-
-def find_files(directory: str):
-    files = os.listdir(directory)
-    # create list of all markdown files in directory
-    markdown_files = [(directory + '\\' + file)
-                      for file in files if file.endswith('.mmd')]
-    for md_file in markdown_files:
-        format_markdown_file_to_BBcode(md_file)
 
 
 def check_markdown(line: str) -> str:
     """Check the passed string and validate all markdown in it"""
+    # TODO: add proper checks
     line = _double_paragraph_breaks(line)
     return line
 
@@ -33,24 +27,15 @@ def convert_markdown_to_BBcode(line: str) -> str:
 
 
 def _link_markdown_to_BBcode(line: str) -> str:
-    simple_pattern = re.compile(r'\[(.*?)]\(((http|www)?.*?)\)')
-    complex_pattern = re.compile(r'<(.*?)>')
-    substitutions = []
+    simple_pattern = re.compile(r'<(.*?)>')
+    complex_pattern = re.compile(r'\[(.*?)]\(((http|www)?.*?)\)')
 
-    for match in re.findall(r'({}|{})'.format(simple_pattern, complex_pattern), line):
-        match = match[0]
+    for simple_match in re.finditer(simple_pattern, line):
+        line = line.replace(simple_match.group(0), '[URL]{}[/URL]'.format(simple_match.group(1)))
+    for complex_match in re.finditer(complex_pattern, line):
+        line = line.replace(complex_match.group(
+            0), '[URL={}]{}[/URL]'.format(complex_match.group(2), complex_match.group(1)))
 
-        if re.search(simple_pattern, match):
-            link = re.search(simple_pattern, match)
-            substitutions.append(
-                (re.sub(simple_pattern, '[URL=' + link.group(2) + ']' + link.group(1) + '[/URL]', match), match))
-
-        elif re.search(complex_pattern, match):
-            link = re.search(complex_pattern, match)
-            substitutions.append((re.sub(complex_pattern, '[URL]' + link.group(1) + '[/URL]', match), match))
-
-    for (new, old) in substitutions:
-        line = line.replace(old, new)
     return line
 
 
@@ -64,44 +49,15 @@ def _double_paragraph_breaks(line: str) -> str:
 
 
 def _bold_markdown_to_BBcode(line: str) -> str:
-    """Takes a string and returns a single BBcode string with bold formatting"""
-    # explode into bold parts
-    bold_parts = re.split(r'(\*{2}.+?\*{2})', line)
-    for part in range(len(bold_parts)):
-        if bold_parts[part - 1].startswith('**'):
-            bold_parts[part - 1] = '[B]' + bold_parts[part - 1].lstrip('**')
-        if bold_parts[part - 1].endswith('**'):
-            bold_parts[part - 1] = bold_parts[part - 1].rstrip('**') + '[/B]'
-    return ''.join(bold_parts)
+    line = re.sub(r'\*{2}(.*?)\*{2}', r'[B]\1[/B]', line)
+    return line
 
 
 def _strong_markdown_to_BBcode(line: str) -> str:
-    strong_parts = re.split(r'(\*{3}.+?\*{3})', line)
-    for part in range(len(strong_parts)):
-        if strong_parts[part - 1].startswith('***'):
-            strong_parts[part - 1] = '[B][I]' + strong_parts[part - 1].lstrip('***')
-        if strong_parts[part - 1].endswith('***'):
-            strong_parts[part - 1] = strong_parts[part - 1].rstrip('***') + '[/I][/B]'
-    return ''.join(strong_parts)
+    line = re.sub(r'\*{3}(.*?)\*{3}', r'[B][I]\1[/I][/B]', line)
+    return line
 
 
 def _italic_markdown_to_BBcode(line: str) -> str:
-    italic_parts = re.split(r'(\*.+?\*)', line)
-    for part in range(len(italic_parts)):
-        if italic_parts[part - 1].startswith('*'):
-            italic_parts[part - 1] = '[I]' + italic_parts[part - 1].lstrip('*')
-        if italic_parts[part - 1].endswith('*'):
-            italic_parts[part - 1] = italic_parts[part - 1].rstrip('*') + '[/I]'
-    return ''.join(italic_parts)
-
-
-def format_markdown_file_to_BBcode(file: str):
-    with open(file, 'r', encoding='utf-8') as markdown:
-        lines = markdown.readlines()
-        formatted = []
-        for line in lines:
-            # add double lines for each paragraph
-            line = line.replace('\n', '\n\n')
-            formatted.append(convert_markdown_to_BBcode(line))
-    with open(file.rstrip('.mmd') + 'formatted.txt', 'w') as textfile:
-        textfile.writelines(formatted)
+    line = re.sub(r'\*(.*?)\*', r'[I]\1[/I]', line)
+    return line
