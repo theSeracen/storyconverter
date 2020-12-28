@@ -5,6 +5,8 @@
 
 import re
 
+from storyconverter.commonfunctions import create_paragraph_breaks
+
 
 def convert_BBcode_to_markdown(line: str) -> str:
     """Converts a string of BBcode to markdown formatting"""
@@ -12,7 +14,7 @@ def convert_BBcode_to_markdown(line: str) -> str:
         _bold_bbcode_to_markdown,
         _italics_bbcode_to_markdown,
         _links_bbcode_to_markdown,
-        _double_paragraph_breaks]
+        create_paragraph_breaks]
     for formatfunc in formatting_functions:
         line = formatfunc(line)
     return line
@@ -21,7 +23,6 @@ def convert_BBcode_to_markdown(line: str) -> str:
 def check_bbcode(line: str) -> str:
     """Check the passed string and validate all BBcode in it"""
     # TODO: add proper checks
-    line = _double_paragraph_breaks(line)
     return line
 
 
@@ -33,15 +34,6 @@ def _italics_bbcode_to_markdown(line: str) -> str:
 def _bold_bbcode_to_markdown(line: str) -> str:
     line = re.sub(r'(?i)\[/?b]', '**', line)
     return line
-
-
-def _double_paragraph_breaks(line: str) -> str:
-    """Doubles the new lines in the document, if there is not already a blank line between each paragraph"""
-    # number 5 is completely arbitrary; just need to find if there's more than 5 empty lines
-    if len(re.findall(r'\n\n', line)) >= 5:
-        return line
-    else:
-        return line.replace('\n', '\n\n')
 
 
 def _links_bbcode_to_markdown(line: str) -> str:
