@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # encoding=utf-8
+
 """Module for converting BBcode tags"""
 
 import re
@@ -19,19 +20,18 @@ def convert_BBcode_to_markdown(line: str) -> str:
 
 def check_bbcode(line: str) -> str:
     """Check the passed string and validate all BBcode in it"""
+    # TODO: add proper checks
     line = _double_paragraph_breaks(line)
     return line
 
 
 def _italics_bbcode_to_markdown(line: str) -> str:
-    match_pattern = re.compile(r'(?i)\[/?i]')
-    line = match_pattern.sub('*', line)
+    line = re.sub(r'(?i)\[/?i]', '*', line)
     return line
 
 
 def _bold_bbcode_to_markdown(line: str) -> str:
-    match_pattern = re.compile(r'(?i)\[/?b]')
-    line = match_pattern.sub('**', line)
+    line = re.sub(r'(?i)\[/?b]', '**', line)
     return line
 
 
@@ -45,24 +45,12 @@ def _double_paragraph_breaks(line: str) -> str:
 
 
 def _links_bbcode_to_markdown(line: str) -> str:
-    simple_link_pattern = r'\[URL\](.*?)\[/URL\]'
-    complex_link_pattern = r'\[URL=(.*?)\](.*?)\[/URL\]'
+    simple_link_pattern = re.compile(r'\[URL](.*?)\[/URL]')
+    complex_link_pattern = re.compile(r'\[URL=(.*?)](.*?)\[/URL]')
 
-    substitutions = []
+    for simple_match in re.finditer(simple_link_pattern, line):
+        line = line.replace(simple_match.group(0), '<{}>'.format(simple_match.group(1)))
+    for complex_match in re.finditer(complex_link_pattern, line):
+        line = line.replace(complex_match.group(0), '[{}]({})'.format(complex_match.group(2), complex_match.group(1)))
 
-    for match in re.findall(r'({}|{})'.format(simple_link_pattern, complex_link_pattern), line):
-        match = match[0]
-
-        if re.search(complex_link_pattern, match):
-            link = re.search(complex_link_pattern, match)
-            substitutions.append(
-                (re.sub(complex_link_pattern, '[' + link.group(2) + '](' + link.group(1) + ')', match),
-                 match))
-
-        elif re.search(simple_link_pattern, match):
-            link = re.search(simple_link_pattern, match)
-            substitutions.append((re.sub(simple_link_pattern, '<' + link.group(1) + '>', match), match))
-
-    for (new, old) in substitutions:
-        line = line.replace(old, new)
     return line
