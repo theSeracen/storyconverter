@@ -26,7 +26,7 @@ def _flatten(passed_argument):
     return rt
 
 
-def concatenate_files(file_list: list[str]):
+def concatenate_files(file_list: list[str]) -> str:
     file_contents = []
     for file_location in sorted(file_list):
         with open(file_location, 'r') as file:
