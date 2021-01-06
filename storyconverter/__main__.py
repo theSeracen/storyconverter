@@ -4,12 +4,12 @@
 import argparse
 import logging
 import pathlib
-import re
 import sys
 
 from storyconverter.bbcodeformatter import convert_BBcode_to_markdown
 from storyconverter.commonfunctions import (concatenate_files,
                                             create_paragraph_breaks)
+from storyconverter.format import StoryFormat, determine_source_markup
 from storyconverter.markdownformatter import convert_markdown_to_BBcode
 
 logger = logging.getLogger()
@@ -24,16 +24,6 @@ def _setup_arguments():
     parser.add_argument('--overwrite', action='store_true', default=False)
 
 
-def _determine_source_format(filename: pathlib.Path, file_contents: str) -> str:
-    if filename.suffix.lower() in ['.md', '.mmd', '.markdown']:
-        return 'markdown'
-
-    if re.search(r'(?i)\[/?[bi]]', file_contents):
-        return 'bbcode'
-    elif re.search(r'\*{1,3}.*?\*{1,3}', file_contents):
-        return 'markdown'
-
-
 if __name__ == '__main__':
     logger.setLevel(1)
     stream = logging.StreamHandler(sys.stdout)
@@ -44,6 +34,7 @@ if __name__ == '__main__':
     _setup_arguments()
     args = parser.parse_args()
 
+    args.format = StoryFormat[args.format.upper()]
     args.output = pathlib.Path(args.output).resolve()
     args.source = [pathlib.Path(s).resolve() for s in args.source]
 
@@ -60,19 +51,19 @@ if __name__ == '__main__':
         logger.info('Loading {}'.format(file))
 
     if not args.source_format:
-        args.source_format = _determine_source_format(args.source[0], ''.join(source_data[0]))
-        logger.info('Determined filetype {} heuristically'.format(args.source_format))
+        args.source_format = determine_source_markup(args.source[0], ''.join(source_data[0]))
+        logger.info('Determined filetype {} heuristically'.format(args.source_format.name))
 
     if args.source_format == args.format:
         raise Exception('Source and wanted formats are the same')
 
     converted_data = create_paragraph_breaks(source_data)
-    if args.format == 'markdown' and args.source_format == 'bbcode':
+    if args.format == StoryFormat.MARKDOWN and args.source_format == StoryFormat.BBCODE:
         logger.info('Converting BBcode to markdown')
         converted_data = [convert_BBcode_to_markdown(line) for line in converted_data]
         args.output = pathlib.Path(str(args.output) + '.md')
 
-    elif args.format == 'bbcode' and args.source_format == 'markdown':
+    elif args.format == StoryFormat.BBCODE and args.source_format == StoryFormat.BBCODE:
         logger.info('Converting Markdown to BBcode')
         converted_data = [convert_markdown_to_BBcode(line) for line in converted_data]
         args.output = pathlib.Path(str(args.output) + '.txt')
