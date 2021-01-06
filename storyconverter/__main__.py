@@ -6,8 +6,9 @@ import logging
 import pathlib
 import sys
 
-from storyconverter.bbcodeformatter import convert_BBcode_to_markdown
+from storyconverter.bbcodeformatter import convert_BBcode_to_markdown, validate_bbCode
 from storyconverter.commonfunctions import concatenate_files, create_paragraph_breaks
+from storyconverter.exceptions import ValidationError
 from storyconverter.format import StoryFormat, determine_source_markup
 from storyconverter.markdownformatter import convert_markdown_to_BBcode
 
@@ -65,6 +66,10 @@ if __name__ == '__main__':
     elif args.format == StoryFormat.BBCODE and args.source_format == StoryFormat.BBCODE:
         logger.info('Converting Markdown to BBcode')
         converted_data = [convert_markdown_to_BBcode(line) for line in converted_data]
+        try:
+            validate_bbCode(converted_data)
+        except ValidationError as e:
+            logger.warning('BBCode output failed to validate: {}'.format(e))
         args.output = pathlib.Path(str(args.output) + '.txt')
 
     else:

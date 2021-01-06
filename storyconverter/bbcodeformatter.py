@@ -5,7 +5,7 @@
 
 import re
 
-from storyconverter.commonfunctions import create_paragraph_breaks
+from storyconverter.exceptions import ValidationError
 
 
 def convert_BBcode_to_markdown(line: str) -> str:
@@ -19,10 +19,19 @@ def convert_BBcode_to_markdown(line: str) -> str:
     return line
 
 
-def check_bbcode(line: str) -> str:
+def validate_bbCode(lines: list[str]):
     """Check the passed string and validate all BBcode in it"""
-    # TODO: add proper checks
-    return line
+    # Convert all to uppercase so flags are easier to catch
+    lines = ''.join(lines).upper()
+    for markdown_pair in (('[B]', '[/B]'), ('[I]', '[/I]')):
+        pair1 = lines.count(markdown_pair[0])
+        pair2 = lines.count(markdown_pair[1])
+        try:
+            assert pair1 == pair2
+        except AssertionError:
+            raise ValidationError(
+                'Markdown pairs are unequal: {} {}, {} {}'.format(markdown_pair[0], pair1, markdown_pair[1], pair2))
+    return True
 
 
 def _italics_bbcode_to_markdown(line: str) -> str:
