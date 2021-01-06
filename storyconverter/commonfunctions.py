@@ -2,6 +2,7 @@
 # encoding=utf-8
 
 import pathlib
+from typing import Any
 
 from more_itertools import intersperse
 
@@ -19,14 +20,14 @@ def create_paragraph_breaks(lines: list[str]) -> list[str]:
     return list(intersperse('\n', flattened_lines))
 
 
-def _flatten(passed_argument):
-    rt = []
+def _flatten(passed_argument: list[Any]) -> list:
+    out = []
     for item in passed_argument:
         if isinstance(item, list):
-            rt.extend(_flatten(item))
+            out.extend(_flatten(item))
         else:
-            rt.append(item)
-    return rt
+            out.append(item)
+    return out
 
 
 def concatenate_files(file_list: list[pathlib.Path]) -> list[str]:
