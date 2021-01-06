@@ -17,3 +17,9 @@ The following are options that are not required:
   - `--source-format` can be used to specify the input format, otherwise it will be determined heuristically from the first input file
   - `-O, --output` can be used to specify the output destination; the default is to output in the current directory using the first source file's name with an appropriate extension
   - `--overwrite` will allow the output to be overwritten; if the destination file already exists and this option is not given, an exception will be raised
+
+## Example Command
+
+To take two markdown files, concatenate them, and then output a BBCode file, the following command could be used.
+
+`python3 -m storyconverter file1.md file2.md bbcode -O converted_file.txt`
