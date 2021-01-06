@@ -5,13 +5,16 @@
 
 import re
 
-from storyconverter.commonfunctions import create_paragraph_breaks
+from storyconverter.exceptions import ValidationError
 
 
-def check_markdown(line: str) -> str:
-    """Check the passed string and validate all markdown in it"""
-    # TODO: add proper checks
-    return line
+def validate_markdown(lines: list[str]):
+    lines = ''.join(lines)
+    for asterisk_pattern in ('***', '**', '*'):
+        try:
+            assert lines.count(asterisk_pattern) % 2 == 0
+        except AssertionError:
+            raise ValidationError('There are an unequal number of "{}"'.format(asterisk_pattern))
 
 
 def convert_markdown_to_BBcode(line: str) -> str:

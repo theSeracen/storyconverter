@@ -10,7 +10,7 @@ from storyconverter.bbcodeformatter import convert_BBcode_to_markdown, validate_
 from storyconverter.commonfunctions import concatenate_files, create_paragraph_breaks
 from storyconverter.exceptions import ValidationError
 from storyconverter.format import StoryFormat, determine_source_markup
-from storyconverter.markdownformatter import convert_markdown_to_BBcode
+from storyconverter.markdownformatter import convert_markdown_to_BBcode, validate_markdown
 
 logger = logging.getLogger()
 parser = argparse.ArgumentParser()
@@ -61,6 +61,10 @@ if __name__ == '__main__':
     elif args.format == StoryFormat.MARKDOWN and args.source_format == StoryFormat.BBCODE:
         logger.info('Converting BBcode to markdown')
         converted_data = [convert_BBcode_to_markdown(line) for line in converted_data]
+        try:
+            validate_markdown(converted_data)
+        except ValidationError as e:
+            logger.warning('Markdown output failed to validate: {}'.format(e))
         args.output = pathlib.Path(str(args.output) + '.md')
 
     elif args.format == StoryFormat.BBCODE and args.source_format == StoryFormat.BBCODE:

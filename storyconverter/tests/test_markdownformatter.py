@@ -3,6 +3,7 @@
 import pytest
 
 from storyconverter import markdownformatter
+from storyconverter.exceptions import ValidationError
 
 
 @pytest.mark.parametrize(('test_string', 'expected'),
@@ -80,3 +81,24 @@ def test_link_mixed_markdown_to_BBcode(test_string: str, expected: str):
 def test_complex_strings_markdown_to_BBcode(test_string: str, expected: str):
     result = markdownformatter.convert_markdown_to_BBcode(test_string)
     assert result == expected
+
+
+@pytest.mark.parametrize('test_string', ('*test',
+                                         '**test',
+                                         '***test',
+                                         'test*',
+                                         '*test**',
+                                         '*test**test*',
+                                         '**test* *'))
+def test_markdown_validation_fail(test_string: str):
+    with pytest.raises(ValidationError):
+        markdownformatter.validate_markdown([test_string])
+
+
+@pytest.mark.parametrize('test_string', ('*test*',
+                                         '**test**',
+                                         '*test* *test*',
+                                         '*one* and *two*',
+                                         '**one** and *two*'))
+def test_markdown_validation_correct(test_string: str):
+    markdownformatter.validate_markdown([test_string])
