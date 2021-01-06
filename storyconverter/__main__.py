@@ -7,8 +7,7 @@ import pathlib
 import sys
 
 from storyconverter.bbcodeformatter import convert_BBcode_to_markdown
-from storyconverter.commonfunctions import (concatenate_files,
-                                            create_paragraph_breaks)
+from storyconverter.commonfunctions import concatenate_files, create_paragraph_breaks
 from storyconverter.format import StoryFormat, determine_source_markup
 from storyconverter.markdownformatter import convert_markdown_to_BBcode
 
@@ -54,11 +53,11 @@ if __name__ == '__main__':
         args.source_format = determine_source_markup(args.source[0], ''.join(source_data[0]))
         logger.info('Determined filetype {} heuristically'.format(args.source_format.name))
 
+    converted_data = create_paragraph_breaks(source_data)
     if args.source_format == args.format:
         raise Exception('Source and wanted formats are the same')
 
-    converted_data = create_paragraph_breaks(source_data)
-    if args.format == StoryFormat.MARKDOWN and args.source_format == StoryFormat.BBCODE:
+    elif args.format == StoryFormat.MARKDOWN and args.source_format == StoryFormat.BBCODE:
         logger.info('Converting BBcode to markdown')
         converted_data = [convert_BBcode_to_markdown(line) for line in converted_data]
         args.output = pathlib.Path(str(args.output) + '.md')
@@ -67,6 +66,9 @@ if __name__ == '__main__':
         logger.info('Converting Markdown to BBcode')
         converted_data = [convert_markdown_to_BBcode(line) for line in converted_data]
         args.output = pathlib.Path(str(args.output) + '.txt')
+
+    else:
+        raise Exception('Unknown format combination: {} -> {}'.format(args.source_format.name, args.format.name))
 
     if args.output.exists() and args.overwrite is False:
         raise Exception('Output file exists and overwriting disabled')
