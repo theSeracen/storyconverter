@@ -36,4 +36,5 @@ def concatenate_files(file_list: list[pathlib.Path]) -> list[str]:
         with open(file_location, 'r') as file:
             file_contents.append(file.read())
 
+    # TODO: make this file separator configurable
     return _flatten(list(intersperse(['\n-------------\n'], file_contents)))
