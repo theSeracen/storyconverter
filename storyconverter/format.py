@@ -8,9 +8,9 @@ from typing import Optional
 
 
 class StoryFormat(Enum):
-    MARKDOWN = auto
-    BBCODE = auto
-    UNKNOWN = auto
+    MARKDOWN = auto()
+    BBCODE = auto()
+    UNKNOWN = auto()
 
 
 def determine_source_markup(filename: pathlib.Path, file_contents: str) -> StoryFormat:
@@ -34,3 +34,5 @@ def _determine_from_file_content(content: str) -> Optional[StoryFormat]:
         return StoryFormat.BBCODE
     elif re.search(r'\*{1,3}.*?\*{1,3}', content):
         return StoryFormat.MARKDOWN
+    else:
+        return None
