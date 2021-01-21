@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 import storyconverter.__main__ as storyconverter
+from storyconverter.exceptions import ValidationError
 from storyconverter.format import StoryFormat
 
 
@@ -80,22 +81,24 @@ def test_validate_markdown_command(args: argparse.Namespace, capsys: pytest.Capt
 @pytest.mark.parametrize('test_string', ('test', 'test *2*', 'another **test** string'))
 def test_validate_markdown_function_good(args: argparse.Namespace, capsys: pytest.CaptureFixture, test_string: str):
     args.format = StoryFormat.MARKDOWN
-    assert storyconverter.validate(args, [test_string])
+    storyconverter.validate(args, [test_string])
 
 
 @pytest.mark.parametrize('test_string', ('*test', '**test* two', '*test* **test* test'))
 def test_validate_markdown_function_bad(args: argparse.Namespace, capsys: pytest.CaptureFixture, test_string: str):
     args.format = StoryFormat.MARKDOWN
-    assert not storyconverter.validate(args, [test_string])
+    with pytest.raises(ValidationError):
+        storyconverter.validate(args, [test_string])
 
 
 @pytest.mark.parametrize('test_string', ('test', '[I]bbcode[/I]', 'a [i]test[/i]'))
 def test_validate_bbcode_function_good(args: argparse.Namespace, capsys: pytest.CaptureFixture, test_string: str):
     args.format = StoryFormat.BBCODE
-    assert storyconverter.validate(args, [test_string])
+    storyconverter.validate(args, [test_string])
 
 
 @pytest.mark.parametrize('test_string', ('[b]test', '[B]test[/I]'))
 def test_validate_bbcode_function_bad(args: argparse.Namespace, capsys: pytest.CaptureFixture, test_string: str):
     args.format = StoryFormat.BBCODE
-    assert not storyconverter.validate(args, [test_string])
+    with pytest.raises(ValidationError):
+        storyconverter.validate(args, [test_string])

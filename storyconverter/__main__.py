@@ -37,15 +37,19 @@ def convert_files(args, source_data: list[str]):
     elif args.format == StoryFormat.MARKDOWN and args.source_format == StoryFormat.BBCODE:
         logger.info('Converting BBcode to markdown')
         converted_data = [convert_BBcode_to_markdown(line) for line in converted_data]
-        if not validate_markdown(converted_data):
-            logger.warning('Markdown output failed to validate')
+        try:
+            validate_markdown(converted_data)
+        except ValidationError as e:
+            logger.warning('Markdown output failed to validate'.format(e))
         args.output = pathlib.Path(str(args.output) + '.md')
 
     elif args.format == StoryFormat.BBCODE and args.source_format == StoryFormat.MARKDOWN:
         logger.info('Converting Markdown to BBcode')
         converted_data = [convert_markdown_to_BBcode(line) for line in converted_data]
-        if not validate_bbCode(converted_data):
-            logger.warning('BBCode output failed to validate')
+        try:
+            validate_bbCode(converted_data)
+        except ValidationError as e:
+            logger.warning('BBCode output failed to validate: {}'.format(e))
         args.output = pathlib.Path(str(args.output) + '.txt')
 
     else:
@@ -62,17 +66,10 @@ def convert_files(args, source_data: list[str]):
 
 
 def validate(args: argparse.Namespace, source_data: list[str]):
-    try:
-        if args.format == StoryFormat.MARKDOWN:
-            validate_markdown(source_data)
-        elif args.format == StoryFormat.BBCODE:
-            validate_bbCode(source_data)
-        else:
-            raise ValidationError
-    except ValidationError:
-        return False
-    else:
-        return True
+    if args.format == StoryFormat.MARKDOWN:
+        validate_markdown(source_data)
+    elif args.format == StoryFormat.BBCODE:
+        validate_bbCode(source_data)
 
 
 def _setup_logging(log_to_stdout: bool, verbosity: int):
@@ -111,10 +108,12 @@ def main(args: argparse.Namespace):
         logger.info('Determined filetype {} heuristically'.format(args.source_format.name))
 
     if args.validate:
-        if validate(args, source_data):
-            logger.info('Successfully validated source as {}'.format(args.format.name))
+        try:
+            validate(args, source_data)
+        except ValidationError as e:
+            logger.error('Failed to validate source as {}: {}'.format(args.format.name, e))
         else:
-            logger.error('Failed to validate source as {}'.format(args.format.name))
+            logger.info('Successfully validated source as {}'.format(args.format.name))
     else:
         convert_files(args, source_data)
 
