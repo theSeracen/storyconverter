@@ -30,7 +30,7 @@ def validate_bbCode(lines: list[str]):
             assert pair1 == pair2
         except AssertionError:
             raise ValidationError(
-                'Markdown pairs are unequal: {} {}, {} {}'.format(markdown_pair[0], pair1, markdown_pair[1], pair2))
+                'BBCode pairs are unequal: {} {}, {} {}'.format(markdown_pair[0], pair1, markdown_pair[1], pair2))
     return True
 
 
