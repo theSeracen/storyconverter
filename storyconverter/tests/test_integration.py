@@ -20,6 +20,7 @@ def args() -> argparse.Namespace:
     args.verbosity = 0
     args.stdout = False
     args.output = '.'
+    args.validate = False
     return args
 
 
@@ -57,3 +58,44 @@ def test_markdown_to_bbcode_stdout(args: argparse.Namespace, capsys: pytest.Capt
     storyconverter.main(args)
     captured = capsys.readouterr()
     assert 'This is a [I]sample[/I] of markdown text.\n\n' == captured.out
+
+
+def test_validate_bbcode_command(args: argparse.Namespace, capsys: pytest.CaptureFixture):
+    args.format = 'bbcode'
+    args.validate = True
+    storyconverter.main(args)
+    captured = capsys.readouterr()
+    assert 'Successfully validated source as BBCODE' in captured.out
+
+
+def test_validate_markdown_command(args: argparse.Namespace, capsys: pytest.CaptureFixture):
+    args.format = 'markdown'
+    args.source = ['test_resources/markdown_source.md']
+    args.validate = True
+    storyconverter.main(args)
+    captured = capsys.readouterr()
+    assert 'Successfully validated source as MARKDOWN' in captured.out
+
+
+@pytest.mark.parametrize('test_string', ('test', 'test *2*', 'another **test** string'))
+def test_validate_markdown_function_good(args: argparse.Namespace, capsys: pytest.CaptureFixture, test_string: str):
+    args.format = StoryFormat.MARKDOWN
+    assert storyconverter.validate(args, [test_string])
+
+
+@pytest.mark.parametrize('test_string', ('*test', '**test* two', '*test* **test* test'))
+def test_validate_markdown_function_bad(args: argparse.Namespace, capsys: pytest.CaptureFixture, test_string: str):
+    args.format = StoryFormat.MARKDOWN
+    assert not storyconverter.validate(args, [test_string])
+
+
+@pytest.mark.parametrize('test_string', ('test', '[I]bbcode[/I]', 'a [i]test[/i]'))
+def test_validate_bbcode_function_good(args: argparse.Namespace, capsys: pytest.CaptureFixture, test_string: str):
+    args.format = StoryFormat.BBCODE
+    assert storyconverter.validate(args, [test_string])
+
+
+@pytest.mark.parametrize('test_string', ('[b]test', '[B]test[/I]'))
+def test_validate_bbcode_function_bad(args: argparse.Namespace, capsys: pytest.CaptureFixture, test_string: str):
+    args.format = StoryFormat.BBCODE
+    assert not storyconverter.validate(args, [test_string])

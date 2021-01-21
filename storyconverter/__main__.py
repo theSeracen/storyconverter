@@ -24,8 +24,55 @@ def _setup_arguments():
     parser.add_argument('-v', '--verbosity', action='count', default=0)
 
     output_options = parser.add_mutually_exclusive_group()
+    output_options.add_argument('-V', '--validate', action='store_true')
     output_options.add_argument('-O', '--output', type=str, default='.')
     output_options.add_argument('-s', '--stdout', action='store_true')
+
+
+def convert_files(args, source_data: list[str]):
+    converted_data = create_paragraph_breaks(source_data)
+    if args.source_format == args.format:
+        raise Exception('Source and wanted formats are the same')
+
+    elif args.format == StoryFormat.MARKDOWN and args.source_format == StoryFormat.BBCODE:
+        logger.info('Converting BBcode to markdown')
+        converted_data = [convert_BBcode_to_markdown(line) for line in converted_data]
+        if not validate_markdown(converted_data):
+            logger.warning('Markdown output failed to validate')
+        args.output = pathlib.Path(str(args.output) + '.md')
+
+    elif args.format == StoryFormat.BBCODE and args.source_format == StoryFormat.MARKDOWN:
+        logger.info('Converting Markdown to BBcode')
+        converted_data = [convert_markdown_to_BBcode(line) for line in converted_data]
+        if not validate_bbCode(converted_data):
+            logger.warning('BBCode output failed to validate')
+        args.output = pathlib.Path(str(args.output) + '.txt')
+
+    else:
+        raise Exception('Unknown format combination: {} -> {}'.format(args.source_format.name, args.format.name))
+    if args.output.exists() and args.overwrite is False:
+        raise Exception('Output file exists and overwriting disabled')
+    if not args.stdout:
+        with open(args.output, 'w') as file:
+            file.write(''.join(converted_data))
+        logger.info('Output file written to {}'.format(args.output))
+    else:
+        for line in converted_data:
+            print(line)
+
+
+def validate(args: argparse.Namespace, source_data: list[str]):
+    try:
+        if args.format == StoryFormat.MARKDOWN:
+            validate_markdown(source_data)
+        elif args.format == StoryFormat.BBCODE:
+            validate_bbCode(source_data)
+        else:
+            raise ValidationError
+    except ValidationError:
+        return False
+    else:
+        return True
 
 
 def _setup_logging(log_to_stdout: bool, verbosity: int):
@@ -63,42 +110,13 @@ def main(args: argparse.Namespace):
         args.source_format = determine_source_markup(args.source[0], ''.join(source_data[0]))
         logger.info('Determined filetype {} heuristically'.format(args.source_format.name))
 
-    converted_data = create_paragraph_breaks(source_data)
-
-    if args.source_format == args.format:
-        raise Exception('Source and wanted formats are the same')
-
-    elif args.format == StoryFormat.MARKDOWN and args.source_format == StoryFormat.BBCODE:
-        logger.info('Converting BBcode to markdown')
-        converted_data = [convert_BBcode_to_markdown(line) for line in converted_data]
-        try:
-            validate_markdown(converted_data)
-        except ValidationError as e:
-            logger.warning('Markdown output failed to validate: {}'.format(e))
-        args.output = pathlib.Path(str(args.output) + '.md')
-
-    elif args.format == StoryFormat.BBCODE and args.source_format == StoryFormat.MARKDOWN:
-        logger.info('Converting Markdown to BBcode')
-        converted_data = [convert_markdown_to_BBcode(line) for line in converted_data]
-        try:
-            validate_bbCode(converted_data)
-        except ValidationError as e:
-            logger.warning('BBCode output failed to validate: {}'.format(e))
-        args.output = pathlib.Path(str(args.output) + '.txt')
-
+    if args.validate:
+        if validate(args, source_data):
+            logger.info('Successfully validated source as {}'.format(args.format.name))
+        else:
+            logger.error('Failed to validate source as {}'.format(args.format.name))
     else:
-        raise Exception('Unknown format combination: {} -> {}'.format(args.source_format.name, args.format.name))
-
-    if args.output.exists() and args.overwrite is False:
-        raise Exception('Output file exists and overwriting disabled')
-
-    if not args.stdout:
-        with open(args.output, 'w') as file:
-            file.write(''.join(converted_data))
-        logger.info('Output file written to {}'.format(args.output))
-    else:
-        for line in converted_data:
-            print(line)
+        convert_files(args, source_data)
 
 
 if __name__ == '__main__':
