@@ -30,7 +30,7 @@ def validate_bbCode(lines: list[str]):
             assert pair1 == pair2
         except AssertionError:
             raise ValidationError(
-                'BBCode pairs are unequal: {} {}, {} {}'.format(markdown_pair[0], pair1, markdown_pair[1], pair2))
+                f'BBCode pairs are unequal: {markdown_pair[0]} {pair1}, {markdown_pair[1]} {pair2}')
     return True
 
 
@@ -49,8 +49,8 @@ def _links_bbcode_to_markdown(line: str) -> str:
     complex_link_pattern = re.compile(r'\[URL=(.*?)](.*?)\[/URL]')
 
     for simple_match in re.finditer(simple_link_pattern, line):
-        line = line.replace(simple_match.group(0), '<{}>'.format(simple_match.group(1)))
+        line = line.replace(simple_match.group(0), f'<{simple_match.group(1)}>')
     for complex_match in re.finditer(complex_link_pattern, line):
-        line = line.replace(complex_match.group(0), '[{}]({})'.format(complex_match.group(2), complex_match.group(1)))
+        line = line.replace(complex_match.group(0), f'[{complex_match.group(2)}]({complex_match.group(1)})')
 
     return line

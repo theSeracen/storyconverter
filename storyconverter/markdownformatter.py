@@ -14,7 +14,7 @@ def validate_markdown(lines: list[str]):
         try:
             assert lines.count(asterisk_pattern) % 2 == 0
         except AssertionError:
-            raise ValidationError('There are an unequal number of "{}"'.format(asterisk_pattern))
+            raise ValidationError(f'There are an unequal number of "{asterisk_pattern}"')
 
 
 def convert_markdown_to_BBcode(line: str) -> str:
